@@ -122,27 +122,23 @@ A couple of notes:
 
 ### Style guides
 
+All in Code should follow the [WordPress Coding Standards](https://make.wordpress.org/core/handbook/best-practices/coding-standards/) and [WordPress Documentation Standards](https://make.wordpress.org/core/handbook/best-practices/inline-documentation-standards/).
+
 #### PHP style guide
 
-Most of our PHP code follows [**PSR-2**](http://www.php-fig.org/psr/psr-2/), *not* WordPress coding standards. This is deliberate, see [#698](https://github.com/versionpress/versionpress/issues/698). Basically, it's mainly because most of VersionPress is a relatively separate, object oriented system developed recently, where anything but PSR-2 doesn't feel right.
+[WordPress PHP Coding Standards](https://make.wordpress.org/core/handbook/best-practices/coding-standards/php/)
 
-There are a couple of cases where some parts of our code do not adhere to PSR-2 strictly:
+[WordPress PHP Documentation Standards](https://make.wordpress.org/core/handbook/best-practices/inline-documentation-standards/php/)
 
-- **Code interacting with WordPress** (hooking into it, providing global functions etc.) follows some of WP conventions. For example, global functions are called like `vp_register_hooks()`, not `registerHooks()`.
-- **WP-CLI commands** use filenames similar to the built-in commands, so for instance `VPCommand` lives in a `vp.php` file, not `VPCommand.php`.
+There are tools out there for apps like Netbeans and PHPStorm to apply WordPress Coding Standards.
 
-Generally, try to follow what's already in place. The project ships with PhpStorm settings, `.editorconfig` etc. so if you use PhpStorm as recommended, it should serve as a good guidance. 
 
 #### JavaScript style guide
 
-The styleguide is under construction. :construction:
+[WordPress Javascript Coding Standards](https://make.wordpress.org/core/handbook/best-practices/coding-standards/javascript/)
 
+[WordPress Javascript Documentation](https://make.wordpress.org/core/handbook/best-practices/inline-documentation-standards/javascript/)
 
-### Get help
-
-Feel free to reach the devs in the [Gitter room](https://gitter.im/versionpress/versionpress) if you need help with anything.
-
-[![Gitter](https://img.shields.io/gitter/room/nwjs/nw.js.svg)](https://gitter.im/versionpress/versionpress)
 
 
 ## Translating

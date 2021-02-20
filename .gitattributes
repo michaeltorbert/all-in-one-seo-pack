@@ -6,3 +6,8 @@ README.md export-ignore
 .eslintignore export-ignore
 .eslintrc export-ignore
 .gitattributes export-ignore
+phpunit.xml.dist export-ignore
+phpunit.xml export-ignore
+tests export-ignore
+bin export-ignore
+.scrutinizer.yml export-ignore
