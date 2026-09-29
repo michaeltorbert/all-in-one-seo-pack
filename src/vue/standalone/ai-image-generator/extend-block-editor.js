@@ -1,0 +1,255 @@
+import {
+	useAiStore,
+	useAiImageGeneratorStore
+} from '@/vue/stores'
+
+import { __ } from '@/vue/plugins/translations'
+import { html } from '@/vue/standalone/blocks/utils'
+import { getEditorDocument } from '@/vue/utils/editor'
+
+import aiAssistantIcon from '@/vue/standalone/blocks/ai-assistant/icon'
+
+const { addFilter } = window.wp.hooks
+const { BlockControls } = window.wp.blockEditor
+const { Button, ToolbarGroup, ToolbarButton } = window.wp.components
+const { Fragment, createRoot, flushSync, render, unmountComponentAtNode } = window.wp.element
+const { createHigherOrderComponent } = window.wp.compose
+const { select, useSelect } = window.wp.data
+
+const td = import.meta.env.VITE_TEXTDOMAIN
+
+const strings = {
+	generateWithAI : __('Generate with AI', td),
+	editWithAI     : __('Edit with AI', td)
+}
+
+let isImageBlockToolbarExtended = false
+
+// React 18 (WP 6.2+) ships `wp.element.createRoot`; fall back to the legacy
+// `render`/`unmountComponentAtNode` pair for older WordPress installs.
+// `flushSync` is used so the rendered output is available synchronously for cloning.
+// NOTE: A narrow window of standalone Gutenberg builds shipped `createRoot` before
+// `flushSync`, so both must be present before taking the React 18 path.
+const renderAndUnmount = (component, container) => {
+	if (createRoot && flushSync) {
+		const root = createRoot(container)
+
+		flushSync(() => {
+			root.render(component)
+		})
+
+		return () => root.unmount()
+	}
+
+	render(component, container)
+
+	return () => unmountComponentAtNode(container)
+}
+
+const clickHandler = ($el, options = {}) => {
+	window.aioseoBus.$emit('do-post-settings-main-tab-change', { name: 'aiContent' })
+
+	$el.classList.add('is-busy')
+	$el.disabled = true
+
+	const aiStore = useAiStore()
+	const aiImageGeneratorStore = useAiImageGeneratorStore()
+
+	// Delay the opening of the modal so its animation can be seen.
+	setTimeout(() => {
+		aiImageGeneratorStore.initiator = options?.initiator
+		if (!aiImageGeneratorStore.initiator || !aiImageGeneratorStore.initiator.slug) {
+			aiImageGeneratorStore.resetInitiator()
+		}
+
+		aiStore.isModalOpened = 'image-generator'
+
+		$el.classList.remove('is-busy')
+		$el.disabled = false
+	}, 500)
+}
+
+export const extendImageBlockToolbar = () => {
+	const aiImageGeneratorStore = useAiImageGeneratorStore()
+
+	if (!aiImageGeneratorStore.extend.imageBlockToolbar) {
+		return
+	}
+
+	// Prevent duplicate filter registrations.
+	if (isImageBlockToolbarExtended) {
+		return
+	}
+
+	addFilter(
+		'editor.BlockEdit',
+		'aioseo/extend-image-block-toolbar',
+		createHigherOrderComponent(BlockEdit => {
+			return props => {
+				const isImageWithUrl = 'core/image' === props.name && props.attributes?.url
+
+				const wpMedia = useSelect((select) => {
+					if (!isImageWithUrl || !props.attributes?.id) {
+						return null
+					}
+
+					return select('core').getEntityRecord('postType', 'attachment', props.attributes.id) || null
+				}, [ `media-${props.attributes.id}` ])
+
+				if (!isImageWithUrl) {
+					return html`<${BlockEdit} ...${props} />`
+				}
+
+				return html`
+				<${Fragment}>
+					<${BlockControls}>
+						<${ToolbarGroup}>
+							<${ToolbarButton}
+								icon=${aiAssistantIcon}
+								iconSize=${24}
+								label=${strings.editWithAI}
+								onClick=${event => { clickHandler(event.currentTarget, { initiator: { slug: 'image-block-toolbar', wpMedia } }) }}
+								style=${{
+									maxHeight : '90%',
+									alignSelf : 'center',
+									padding   : '0'
+								}}
+							/>
+						</${ToolbarGroup}>
+					</${BlockControls}>
+
+					<${BlockEdit} ...${props} />
+				</${Fragment}>`
+			}
+		}, 'extendImageBlockToolbar')
+	)
+
+	isImageBlockToolbarExtended = true
+}
+
+export const extendImageBlockPlaceholder = () => {
+	const aiImageGeneratorStore = useAiImageGeneratorStore()
+
+	if (!aiImageGeneratorStore.extend.imageBlockPlaceholder) {
+		return
+	}
+
+	const selectedBlock = select('core/block-editor').getSelectedBlock()
+	if (
+		!selectedBlock ||
+		'core/image' !== selectedBlock.name ||
+		selectedBlock.attributes?.url
+	) {
+		return
+	}
+
+	// Defer out of the editor's render phase. This callback runs on every
+	// `wp.data.subscribe` tick, i.e. while WordPress's React may be mid-render;
+	// calling `createRoot`/`flushSync`/`unmount` there emits flushSync-lifecycle
+	// and sync-unmount race warnings. `setTimeout` moves the work to a macrotask
+	// after the render settles, which also lets `flushSync` flush synchronously so
+	// the cloned node is reliably available. Same approach as extendFeaturedImageButton.
+	setTimeout(() => {
+		const editorDoc  = getEditorDocument()
+		const $block     = editorDoc.getElementById(`block-${selectedBlock.clientId}`)
+		const $targetBtn = $block?.querySelector('.components-form-file-upload')
+		if (
+			!$targetBtn ||
+			$block?.querySelector('.aioseo-ai-image-generator-btn')
+		) {
+			return
+		}
+
+		const $tempContainer = document.createElement('div')
+
+		const unmount = renderAndUnmount(
+			html`
+				<${Button}
+					className=${'aioseo-ai-image-generator-btn'}
+					variant=${'secondary'}
+					icon=${aiAssistantIcon}
+					iconSize=${'20'}
+					__next40pxDefaultSize=${true}
+				>
+					${strings.generateWithAI}
+				</${Button}>`,
+			$tempContainer
+		)
+
+		const $buttonElement = $tempContainer.firstChild?.cloneNode(true)
+		if ($buttonElement) {
+			// Place the button after the "Upload" button, inside the so called MediaPlaceholder component.
+			$targetBtn.after($buttonElement)
+
+			$buttonElement.addEventListener('click', () => {
+				clickHandler($buttonElement, { initiator: { slug: 'image-block-placeholder' } })
+			})
+		}
+
+		unmount()
+
+		$tempContainer.remove()
+	})
+}
+
+export const extendFeaturedImageButton = () => {
+	const aiImageGeneratorStore = useAiImageGeneratorStore()
+
+	if (!aiImageGeneratorStore.extend.featuredImageButton) {
+		return
+	}
+
+	if ('edit-post/document' !== select('core/edit-post').getActiveGeneralSidebarName()) {
+		return
+	}
+
+	const featuredImageId = select('core/editor').getEditedPostAttribute('featured_media')
+	if (featuredImageId) {
+		document.querySelector('.aioseo-ai-image-generator-btn-featured-image')?.remove()
+
+		return
+	}
+
+	setTimeout(() => {
+		const $featuredImageContainer = document.querySelector('.editor-post-featured-image__container')
+		const $targetBtn              = $featuredImageContainer?.querySelector('button')
+		if (
+			!$targetBtn ||
+			$featuredImageContainer?.querySelector('.aioseo-ai-image-generator-btn-featured-image')
+		) {
+			return
+		}
+
+		$featuredImageContainer.style.display = 'flex'
+		$featuredImageContainer.style.gap     = '8px'
+
+		const $tempContainer = document.createElement('div')
+
+		const unmount = renderAndUnmount(
+			html`
+				<${Button}
+					className=${'aioseo-ai-image-generator-btn-featured-image'}
+					variant=${'secondary'}
+					icon=${aiAssistantIcon}
+					iconSize=${'20'}
+					__next40pxDefaultSize=${true}
+					title=${strings.generateWithAI}
+				/>`,
+			$tempContainer
+		)
+
+		const $buttonElement = $tempContainer.firstChild?.cloneNode(true)
+		if ($buttonElement) {
+			// Place the button after the "Set featured image" button.
+			$targetBtn.after($buttonElement)
+
+			$buttonElement.addEventListener('click', () => {
+				clickHandler($buttonElement, { initiator: { slug: 'featured-image-btn' } })
+			})
+		}
+
+		unmount()
+
+		$tempContainer.remove()
+	})
+}

@@ -1,31 +1,7 @@
-# DEV #
-#######
-.codeclimate.yml
-.csslintrc
-.eslintignore
-.eslintrc
-.travis.yml
-.svn
-
-# IDE #
-#######
-.idea/
-.idea/vcs.xml
-
-# OS #
-######
-*/.DS_Store
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-[Tt]humbs.db
-[Dd]esktop.ini
-*.log
-
-# WordPress #
-#############
-.htaccess
-
+node_modules
+dist
+.DS_STORE
+*.pem
+*.env
+.idea
+*/filters.php

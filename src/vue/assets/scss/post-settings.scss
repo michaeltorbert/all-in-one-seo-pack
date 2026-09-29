@@ -1,0 +1,219 @@
+@use 'app/table-widefat.scss';
+
+.edit-post-meta-boxes-area {
+	#aioseo-settings {
+		h2.hndle {
+			border-bottom: none;
+		}
+	}
+}
+
+#aioseo-settings,
+#aioseo-local-settings {
+	.inside {
+		padding: 0;
+		margin-top: 0;
+	}
+	.aioseo-tab-content {
+		.aioseo-settings-row:last-of-type {
+			border-bottom: 0;
+			margin-bottom: 0;
+			padding-bottom: 0;
+		}
+	}
+}
+#aioseo-tabbed {
+	.handlediv {
+		position: absolute;
+		top: 0;
+		right: 0;
+	}
+	> .inside {
+		min-height: 40px;
+		padding: 0;
+		margin-top: 0;
+	}
+	.aioseo-tab-content {
+		.aioseo-settings-row:last-of-type {
+			border-bottom: 0;
+			margin-bottom: 0;
+			padding-bottom: 0;
+		}
+	}
+}
+
+body.block-editor-page {
+	#aioseo-settings .inside {
+		border: 1px solid $border;
+		border-top: none;
+	}
+
+	.edit-post-sidebar .aioseo-app,
+	.editor-sidebar .aioseo-app {
+		textarea {
+			font-size: 16px;
+		}
+	}
+}
+
+#aioseo-post-settings-sidebar-button {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	border-radius: 3px;
+	height: 36px;
+	min-width: 36px;
+	margin: -7px -7px;
+	padding: 5px;
+	font-weight: bold;
+	color: #fff;
+
+	#aioseo-post-score-disabled {
+		color: $black2;
+		margin-left: 10px;
+	}
+	&.score-green {
+		color: $green;
+		border: 1px solid $green;
+		#aioseo-post-score-disabled {
+			display: none;
+		}
+	}
+	&.score-orange {
+		color: $orange;
+		border: 1px solid $orange;
+		#aioseo-post-score-disabled {
+			display: none;
+		}
+	}
+	&.score-red,
+	&.score-none {
+		color: $red;
+		border: 1px solid $red;
+		#aioseo-post-score-disabled {
+			display: none;
+		}
+	}
+	svg {
+		margin-right: 10px;
+		fill: currentColor !important; // This is needed to override the important statements from WP 5.3. We can remove these when WP 5.3 is no longer supported.
+		* {
+			fill: currentColor !important; // This is needed to override the important statements from WP 5.3. We can remove these when WP 5.3 is no longer supported.
+		}
+	}
+	&.score-disabled {
+		color: $black2;
+		border: 1px solid $black2;
+		svg {
+			margin-right: 0;
+			width: 24px;
+			height: 24px;
+		}
+		span {
+			display: none;
+		}
+		#aioseo-post-score-disabled {
+			display: none;
+		}
+	}
+}
+.aioseo-score-settings {
+	display: flex;
+	align-items: center;
+	padding-bottom: 14px;
+
+	svg {
+		margin-right: 7px;
+	}
+
+	span {
+		margin-right: 12px;
+	}
+
+	.aioseo-score-button {
+		display: inline-block;
+		padding: 5px 8px;
+		font-size: 14px;
+		font-weight: bold;
+		color: #a1a1a1;
+		border: 1px solid #a1a1a1;
+		border-radius: 3px;
+
+		&.score-red,
+		&.score-none {
+			border-color: $red;
+			color: $red !important;
+		}
+		&.score-orange {
+			border-color: $orange;
+			color: $orange !important;
+		}
+		&.score-green {
+			border-color: $green;
+			color: $green !important;
+		}
+		&.classic-editor {
+			background: #fff !important;
+			display: inline-block !important;
+			height: auto !important;
+			span {
+				margin-right: 0;
+			}
+		}
+	}
+}
+button[aria-label="AIOSEO"],
+button[aria-label="AIOSEO"]:hover {
+	background: none !important;
+	box-shadow: none !important;
+
+	&.is-pressed > #aioseo-post-settings-sidebar-button {
+		&.score-green {
+			color: #fff;
+			background-color: $green;
+		}
+		&.score-orange {
+			color: #fff;
+			background-color: $orange;
+		}
+		&.score-red,
+		&.score-none {
+			color: #fff;
+			background-color: $red;
+		}
+		&.score-disabled {
+			color: #fff;
+			background: $black2!important;
+			#aioseo-post-score-disabled {
+				color: #fff!important;
+			}
+		}
+	}
+	&.is-toggled > div,
+	&.components-icon-button > div {
+		svg {
+			fill: #fff!important;
+			stroke: transparent!important;
+			* {
+				fill: #fff!important;
+				stroke: transparent!important;
+			}
+		}
+		#aioseo-post-score-disabled {
+			color: #fff!important;
+		}
+	}
+}
+
+.interface-pinned-items {
+	button.components-button {
+		height: 36px;
+
+		&.is-compact.has-icon {
+			&[aria-label*="AIOSEO"] {
+				width: auto;
+				padding: 6px;
+			}
+		}
+	}
+}

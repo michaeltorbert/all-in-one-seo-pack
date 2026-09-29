@@ -1,0 +1,38 @@
+import { createApp } from 'vue'
+
+import loadPlugins from '@/vue/plugins'
+
+import loadComponents from '@/vue/components/common'
+import loadVersionedComponents from '@/vue/components/AIOSEO_VERSION'
+
+import { loadPiniaStores } from '@/vue/stores'
+
+import App from './App'
+import startRouter from '@/vue/router'
+import paths from '@/vue/pages/seo-analysis/router/paths'
+
+// Factory function to create and configure the SEO Analysis app
+function createSeoAnalysisApp () {
+	let app = createApp({ ...App, name: 'Pages/SeoAnalysis' })
+	app = loadPlugins(app)
+	app = loadComponents(app)
+	app = loadVersionedComponents(app)
+
+	const router = startRouter(paths, app)
+	// Give the router access to the app.
+	router.app = app
+	app.use(router)
+
+	// Use the pinia store.
+	loadPiniaStores(app, router)
+
+	// Optionally, set up global error handling here if needed
+	// app.config.errorHandler = (err, vm, info) => { ... }
+
+	return app
+}
+
+const app = createSeoAnalysisApp()
+app.mount('#aioseo-app')
+
+export default app

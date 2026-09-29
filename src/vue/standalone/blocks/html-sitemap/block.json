@@ -1,0 +1,85 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "aioseo/html-sitemap",
+	"title": "AIOSEO - HTML Sitemap",
+	"description": "Displays a sitemap with your site's posts and terms.",
+	"category": "widgets",
+	"keywords": [
+		"html sitemap",
+		"link",
+		"list",
+		"menu",
+		"navigation",
+		"posts",
+		"posts list",
+		"posts sitemap",
+		"terms",
+		"terms list",
+		"terms sitemap",
+		"simple sitemap",
+		"sitemap",
+		"visual sitemap"
+	],
+	"textdomain": "all-in-one-seo-pack",
+	"attributes": {
+		"default": {
+			"type": "boolean",
+			"default": true
+		},
+		"post_types": {
+			"type": "string",
+			"default": "[\"post\", \"page\"]"
+		},
+		"post_types_all": {
+			"type": "boolean",
+			"default": true
+		},
+		"taxonomies": {
+			"type": "string",
+			"default" : "[\"category\", \"post_tag\"]"
+		},
+		"taxonomies_all": {
+			"type": "boolean",
+			"default": true
+		},
+		"show_label": {
+			"type": "boolean",
+			"default": true
+		},
+		"archives": {
+			"type": "boolean",
+			"default": false
+		},
+		"publication_date": {
+			"type": "boolean",
+			"default": true
+		},
+		"nofollow_links": {
+			"type": "boolean",
+			"default": false
+		},
+		"order_by": {
+			"type": "string",
+			"default": "publish_date"
+		},
+		"order": {
+			"type": "string",
+			"default": "asc"
+		},
+		"excluded_posts": {
+			"type": "string",
+			"default": "[]"
+		},
+		"excluded_terms": {
+			"type": "string",
+			"default": "[]"
+		},
+		"is_admin": {
+			"type": "boolean"
+		}
+	},
+	"supports": {
+		"html": false
+	}
+}

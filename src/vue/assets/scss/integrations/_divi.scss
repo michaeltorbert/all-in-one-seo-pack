@@ -1,0 +1,293 @@
+@use '@/vue/assets/scss/app/variables.scss' as *;
+@use '@/vue/assets/scss/app/mixins.scss' as *;
+
+$settings-bar-height: 90px;
+
+.et-fb {
+	/* The containers */
+	#aioseo-settings {
+		position: absolute;
+		width: 36px;
+		height: 36px;
+		background-color: #fff !important;
+		z-index: 10;
+		pointer-events: auto;
+		cursor: pointer;
+		visibility: hidden;
+		border-radius: 50% !important;
+		&::before {
+			@include icon;
+			display: block;
+			fill: #fff;
+			margin: -2px 0 0 -2px;
+			width: 40px;
+			height: 40px;
+			background-color: #6c2eb9; /* Divi purple */
+		}
+	}
+
+	#aioseo-app-modal {
+		position: absolute;
+		z-index: 10;
+		top: 0;
+		left: 0;
+		height: 0;
+		width: 0;
+		overflow: visible;
+
+		.aioseo-pagebuilder-modal {
+			.add-focus-keyphrase-sidebar-button {
+				.popper {
+					/* We need this as popper adds styles inline dynamically and that has the highest specificity */
+					left: 40px !important;
+				}
+			}
+		}
+	}
+
+	&.aioseo-settings-bar-is {
+		&-inactive {
+			#aioseo-settings {
+				visibility: visible;
+
+				&.aioseo-settings-bar-root {
+					&-top,
+					&-bottom,
+					&-top-left,
+					&-bottom-left {
+						left: calc(50% + 45px)
+					}
+
+					&-top-right,
+					&-bottom-right {
+						right: calc(50% + 45px)
+					}
+
+					&-left,
+					&-right {
+						top: calc(50% + 45px)
+					}
+				}
+			}
+		}
+
+		&-active {
+			#aioseo-settings {
+				visibility: visible;
+
+				&.aioseo-settings-bar-root-is {
+					&-mobile {
+						&-top-left,
+						&-top-right {
+							top: calc(100% + 24px)
+						}
+
+						&-bottom-left,
+						&-bottom-right {
+							bottom: calc(100% + 24px)
+						}
+
+						&-left,
+						&-right {
+							top: calc(100% + 24px)
+						}
+					}
+
+					&-desktop {
+						&-top,
+						&-bottom,
+						&-top-left,
+						&-bottom-left {
+							left: calc(100% + 24px)
+						}
+
+						&-top-right,
+						&-bottom-right {
+							right: calc(100% + 24px)
+						}
+
+						&-left,
+						&-right {
+							top: calc(100% + 24px)
+						}
+					}
+				}
+			}
+		}
+
+		&-top {
+			.aioseo-pagebuilder-modal {
+				top: calc(#{$adminbar-height} + #{$settings-bar-height});
+				left: $modal-spacing;
+			}
+
+			&-right {
+				.aioseo-pagebuilder-modal {
+					top: calc(#{$adminbar-height} + #{$settings-bar-height});
+					left: $modal-spacing;
+				}
+			}
+
+			&-left {
+				.aioseo-pagebuilder-modal {
+					left: calc(100vw - #{$modal-width} - #{$modal-spacing});
+				}
+			}
+		}
+
+		&-bottom {
+			.aioseo-pagebuilder-modal {
+				left: $modal-spacing;
+			}
+
+			&-right {
+				.aioseo-pagebuilder-modal {
+					left: $modal-spacing;
+				}
+			}
+
+			&-left {
+				.aioseo-pagebuilder-modal {
+					left: calc(100vw - #{$modal-width} - #{$modal-spacing});
+				}
+			}
+		}
+
+		&-left {
+			.aioseo-pagebuilder-modal {
+				top: calc(#{$adminbar-height} + #{$settings-bar-height});
+				left: calc(100vw - #{$modal-width} - #{$modal-spacing});
+			}
+		}
+
+		&-right {
+			.aioseo-pagebuilder-modal {
+				left: $modal-spacing;
+			}
+		}
+	}
+
+	.aioseo-pagebuilder-modal {
+		top: calc(#{$modal-spacing} + #{$adminbar-height});
+
+		&-header {
+			background-color: #6c2eb9;
+
+			&-close {
+				svg {
+					position: relative;
+					top: 4px;
+				}
+			}
+		}
+	}
+
+	.aioseo-app,
+	.el-popper {
+
+		.el-input {
+			&__inner {
+				&::placeholder {
+					font-weight: inherit;
+					text-transform: none;
+					letter-spacing: inherit;
+					color: $placeholder-color;
+				}
+			}
+		}
+		/* Datepicker Fixes */
+		.el-date-picker,
+		.el-date-range-picker {
+			table.el-date-table {
+				border: inherit;
+
+				td {
+					border: unset;
+				}
+			}
+
+			.el-picker-panel__icon-btn {
+				padding: 1px 6px;
+				background: inherit;
+
+				&:hover {
+					color: var(--el-datepicker-hover-text-color);
+					background: inherit;
+					text-shadow: inherit;
+				}
+			}
+		}
+
+
+		.aioseo-cta {
+			a.learn-more,
+			a.learn-more:hover {
+				text-decoration: underline;
+			}
+		}
+
+		.custom-rules-table {
+			border: none;
+
+			td {
+				border: none;
+			}
+		}
+
+		// Only the text casing needs undoing here. Setting `display` too outranked every
+		// component that lays out its own <button> (0-2-1 against a lone class), which
+		// flattened full-width buttons into shrink-to-fit flex containers.
+		// `.aioseo-button` already declares its own inline-flex.
+		button,
+		.aioseo-button {
+			text-transform: initial;
+
+			&:not(:disabled) {
+				&:hover {
+					&.blue, &.black , &.green{
+						color: $white;
+					}
+				}
+			}
+		}
+
+		.aioseo-modal-body {
+			@for $i from 1 through 6 {
+				h#{$i} {
+					text-transform: inherit;
+				}
+			}
+		}
+
+
+		&.aioseo-post-schema-confirmation-modal {
+			@for $i from 1 through 6 {
+				h#{$i} {
+					text-transform: inherit;
+				}
+			}
+		}
+
+		.input,
+		.textarea,
+		input,
+		input[type="email"],
+		input[type="password"],
+		input[type="search"],
+		input[type="text"],
+		select,
+		textarea {
+			transition: inherit;
+			-webkit-transition: inherit;
+			background: $white;
+
+			&::placeholder {
+				font-weight: inherit;
+				text-transform: none;
+				letter-spacing: inherit;
+				color: $placeholder-color;
+			}
+
+		}
+	}
+}

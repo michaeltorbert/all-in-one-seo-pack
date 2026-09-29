@@ -1,0 +1,409 @@
+@use 'sass:meta';
+@use 'app/variables.scss' as *;
+@use 'app/table-widefat.scss' as *;
+
+// Inside the Dev environment.
+body.vue-build {
+	margin: 0;
+
+	.aioseo-app {
+		min-height: calc(100vh - var(--aioseo-header-height, 72px));
+
+		.aioseo-main {
+			padding-bottom: 30px;
+		}
+	}
+}
+
+// Inside WordPress.
+body.aioseo-setup-wizard {
+	margin: 0;
+	padding: 0;
+
+	.aioseo-app {
+		min-height: 100vh;
+		width: 100%;
+	}
+}
+
+body[class*="page_aioseo"] {
+	--aioseo-gutter: 20px;
+	--aioseo-header-height: 72px;
+	--aioseo-footer-height: 150px;
+
+	.aioseo-header,
+	.aioseo-notifications .overlay {
+		left: 160px;
+	}
+
+	&.folded {
+		.aioseo-header,
+		.aioseo-notifications .overlay {
+			left: 36px;
+		}
+	}
+
+	#wpcontent {
+		padding: 0;
+		background-color: $background;
+	}
+
+	.update-nag {
+		display: none;
+	}
+
+	.aioseo-app {
+		min-height: calc(100vh - var(--aioseo-header-height) - 65px);
+	}
+
+	&.admin-bar {
+		.aioseo-app {
+			// 100vh (viewport height) - 72px (header) - 65px (wp content margin) - 32px (admin bar) - 150px (footer)
+			min-height: calc(100vh - var(--aioseo-header-height) - 65px - 32px - var(--aioseo-footer-height));
+
+			@media screen and (max-width: 782px) {
+				min-height: calc(100vh - var(--aioseo-header-height) - 65px - 46px - var(--aioseo-footer-height));
+			}
+
+			@media screen and (max-width: 600px) {
+				min-height: calc(100vh - 65px - 46px);
+			}
+		}
+
+		.aioseo-header {
+			top: 32px;
+		}
+
+		.aioseo-notifications {
+			.overlay {
+				top: 32px;
+			}
+
+			.notification-menu {
+				top: 32px;
+			}
+		}
+	}
+
+	&.aioseo-has-bar {
+		--aioseo-header-height: 112px;
+
+		@media screen and (max-width: 782px) {
+			--aioseo-header-height: 132px;
+		}
+	}
+
+	&.aioseo-flyout-menu-enabled {
+		.aioseo-app {
+			overflow: auto;
+			padding-bottom: 40px;
+		}
+	}
+
+	@media screen and (max-width: 960px) {
+		&.auto-fold {
+			.aioseo-header,
+			.aioseo-notifications .overlay {
+				left: 36px;
+			}
+		}
+	}
+
+	@media screen and (max-width: 782px) {
+		#wpbody-content {
+			padding-bottom: 20px;
+		}
+
+		&.admin-bar {
+
+			.aioseo-header {
+				top: 46px;
+			}
+
+			.aioseo-notifications {
+				.overlay {
+					top: 46px;
+				}
+				.notification-menu {
+					top: 46px;
+				}
+			}
+		}
+
+		.aioseo-header,
+		.aioseo-notifications .overlay {
+			left: 0;
+		}
+
+		&.auto-fold {
+			.aioseo-header,
+			.aioseo-notifications .overlay {
+				left: 0;
+			}
+		}
+
+		&.aioseo-flyout-menu-enabled {
+			.aioseo-app {
+				padding-bottom: 100px;
+			}
+		}
+	}
+
+	@media screen and (max-width: 600px) {
+		&.admin-bar {
+			.aioseo-notifications .overlay,
+			.aioseo-notifications .menu {
+				position: absolute;
+				top: 46px;
+			}
+
+			.aioseo-header {
+				position: relative;
+				top: 0;
+			}
+		}
+	}
+}
+
+.aioseo-app,
+#aioseo-user-profile-tab {
+	font-family: $font-family;
+	font-size: $font-md;
+	color-scheme: light;
+
+	box-sizing: border-box;
+	position: relative;
+
+	--aioseo-gutter: 20px;
+
+	@media only screen and (max-width: 782px) {
+		--aioseo-gutter: 16px;
+	}
+
+	.sm,
+	.small {
+		font-size: $font-sm;
+		line-height: 18px;
+	}
+
+	.medium {
+		font-size: $font-md;
+		line-height: 22px;
+	}
+
+	.route-fade-enter-active, .route-fade-leave-active {
+		transition: all 0.2s;
+	}
+
+	.route-fade-enter-from, .route-fade-leave-active {
+		opacity: 0;
+	}
+
+	.route-fade-enter-from {
+		transform: translateX(30px);
+	}
+
+	.route-fade-leave-active {
+		transform: translateX(-30px);
+	}
+
+	*,
+	:after,
+	:before {
+		box-sizing: inherit;
+	}
+
+	*:not(.aioseo-button):not(.aioseo-input) {
+		line-height: 1.4;
+	}
+
+	p {
+		font-size: $font-md;
+		line-height: 22px;
+	}
+
+	a:not(.aioseo-button) {
+		color: $blue;
+
+		&.text-white {
+			color: #fff;
+		}
+
+		&:hover {
+			text-decoration: none;
+		}
+
+		&.no-underline {
+			text-decoration: none;
+		}
+	}
+
+	h2 {
+		font-size: 32px;
+		margin: 0;
+	}
+
+	.aioseo-scroll-and-highlight-margin {
+		scroll-margin-top: 92px;
+	}
+
+	.aioseo-main {
+		height: 100%;
+
+		> .aioseo-container {
+			margin-top: 0;
+			padding-block: var(--aioseo-gutter);
+
+			// Padding the top for the header.
+			@media screen and (min-width: 601px) {
+				margin-top: var(--aioseo-header-height);
+			}
+		}
+
+		.save-changes {
+			display: flex;
+			justify-content: flex-end;
+		}
+	}
+
+	.d-flex {
+		display: flex;
+	}
+
+	.aioseo-section-description {
+		font-size: $font-md;
+		color: $black;
+		line-height: 22px;
+		padding-bottom: 16px;
+	}
+
+	.aioseo-description-text {
+		font-size: 14px;
+		line-height: 22px;
+		color: $black;
+
+		&.aioseo-error {
+			color: $red;
+		}
+	}
+
+	.aioseo-description {
+		font-size: 14px;
+		line-height: 22px;
+		margin: 0;
+		color: $black;
+
+		&.no-margin {
+			margin: 0;
+		}
+
+		&.aioseo-error {
+			color: $red;
+		}
+
+		> .aioseo-toggle {
+			margin: 0;
+		}
+	}
+
+	* + .aioseo-description {
+		margin-top: 8px;
+
+		&:has(.aioseo-alert) {
+			margin-top: 12px;
+		}
+	}
+
+	.max-recommended-count {
+		color: $black2;
+		text-align: right;
+		margin-top: 4px;
+		font-size: 14px;
+
+		strong.error {
+			border: none;
+			color: $red;
+		}
+	}
+
+	@include meta.load-css('app/popper');
+
+	.aioseo-row-highlight {
+		animation: aioseo-highlight-pulse 1.5s ease-in-out 3;
+
+		@keyframes aioseo-highlight-pulse {
+			0% {
+				background-color: transparent;
+				box-shadow: 0 0 0 0 transparent;
+			}
+			50% {
+				background-color: #DBEAFE;
+				box-shadow: 0 0 0 8px #DBEAFE;
+			}
+			100% {
+				background-color: transparent;
+				box-shadow: 0 0 0 0 transparent;
+			}
+		}
+	}
+
+	.underline {
+		text-decoration: underline;
+	}
+}
+
+.post-type-product {
+	#aioseo_original {
+		width: 10%;
+	}
+
+	@media (min-width: 768px) and (max-width: 1024px) {
+
+		#name {
+			width: 19%;
+		}
+
+		#sku {
+			width: 12%;
+		}
+
+		#is_in_stock {
+			width: 5ch;
+		}
+
+		#price {
+			width: 8ch;
+		}
+
+		#date {
+			width: 18%;
+		}
+	}
+}
+
+.column-aioseo-details {
+	position: relative;
+	width: 20%;
+}
+
+.no-underline {
+	text-decoration: none;
+}
+
+body,
+#wpfooter {
+	padding-top: 0;
+	background-color: #F3F4F5;
+}
+
+#aioseo-modal-portal {
+	width: 0;
+	height: 0;
+}
+
+// Body-level portal for appended poppers/tooltips. Carries `.aioseo-app` for
+// style scope, but must stay static so it doesn't become the popper's
+// offset parent (which would misposition it to the bottom of the document).
+#aioseo-popper-portal {
+	position: static;
+}

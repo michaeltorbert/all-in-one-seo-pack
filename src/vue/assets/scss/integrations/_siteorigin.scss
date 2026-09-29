@@ -1,0 +1,43 @@
+.siteorigin-panels-builder {
+	.aioseo-live-editor-item {
+		display: none;
+
+		@at-root .so-live-editor-builder & {
+			display: block;
+		}
+	}
+}
+
+.aioseo-site-origin-sidebar--active:not(.modal-open) {
+	#aioseo-modal-portal {
+		z-index: 999998;
+		position: relative;
+	}
+
+	.aioseo-modal {
+		--aioseo-modal-z-index: 999998;
+	}
+
+	.el-popper {
+		--aioseo-datepicker-z-index: 999999;
+	}
+
+	// Tooltips render in a body-level portal, so keep them above the modal too.
+	.popper {
+		--aioseo-popper-z-index: 999999;
+	}
+
+	.aioseo-site-origin-sidebar__content {
+		overflow: visible;
+	}
+}
+
+.so-panels-live-editor {
+	.live-editor-collapse {
+		z-index: 100001 !important;
+	}
+
+	.so-sidebar-tools {
+		z-index: 100000 !important;
+	}
+}

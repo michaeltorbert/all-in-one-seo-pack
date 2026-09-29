@@ -1,0 +1,118 @@
+import {
+	usePostEditorStore,
+	useRootStore
+} from '@/vue/stores'
+
+if ('undefined' !== typeof window && !window.wp?.blockEditor && window.wp?.blocks && window.wp.oldEditor) {
+	window.wp.blockEditor = window.wp.editor
+}
+
+export const isBlockEditor = () => {
+	return document.body.classList.contains('block-editor-page') && window.wp.data && canLoadBlocks()
+}
+
+export const isClassicEditor = () => {
+	return !!document.querySelector('#wp-content-wrap.tmce-active, #wp-content-wrap.html-active')
+}
+
+export const isClassicNoEditor = () => {
+	return document.querySelector('#post input#title') && !document.querySelector('#wp-content-wrap')
+}
+
+export const isElementorEditor = () => {
+	return !!(document.body.classList.contains('elementor-editor-active') && window.elementor)
+}
+
+export const isDiviEditor = () => {
+	 const body = document.body
+	 const hasBuilder = !!window.ET_Builder
+
+	 if (!hasBuilder) {
+		return false
+	 }
+
+	 return body.classList.contains('et_pb_pagebuilder_layout') ||
+		(body.classList.contains('et_divi_builder') && body.classList.contains('et-fb'))
+}
+
+export const isSeedProdEditor = () => {
+	return !!(document.body.classList.contains('seedprod-builder') && window.seedprod_data)
+}
+
+export const isWPBakeryEditor = () => {
+	return !!(window.vc && window.vc_mode)
+}
+
+export const isAvadaEditor = () => {
+	return (window.FusionApp || window.FusionPageBuilderApp)?.builderActive
+}
+
+export const isThriveArchitectEditor = () => {
+	return !!(window.TVE && window.TVE.Editor_Page)
+}
+
+export const isSiteOriginEditor = () => {
+	const visible = (el) => !!(el?.offsetWidth || el?.offsetHeight || el?.getClientRects().length)
+
+	const isBlockEditorPanelsEnabled   = document.querySelectorAll('.block-editor-page').length && 'undefined' !== typeof window.soPanelsBuilderView
+	const isClassicEditorPanelsEnabled = visible(document.querySelector('#so-panels-panels.attached-to-editor'))
+
+	return isBlockEditorPanelsEnabled || isClassicEditorPanelsEnabled
+}
+
+export const isWooCommerceProduct = () => {
+	const postEditorStore = usePostEditorStore()
+	const rootStore       = useRootStore()
+
+	return (
+		rootStore.aioseo.data.isWooCommerceActive &&
+		postEditorStore.currentPost &&
+		'product' === postEditorStore.currentPost.postType
+	)
+}
+
+export const isBricksEditor = () => {
+	try {
+		const builderParam = window?.bricksData?.builderParam
+		return !!builderParam && new URLSearchParams(window.location.search).has(builderParam)
+	} catch {
+		return false
+	}
+}
+
+export const isOxygenEditor = () => {
+	try {
+		return !!(window?.OxygenFrontend?.utils?.isBuilder() || false)
+	} catch {
+		return false
+	}
+}
+
+export const isPageBuilderEditor = () => {
+	return (
+		isElementorEditor() ||
+		isDiviEditor() ||
+		isSeedProdEditor() ||
+		isWPBakeryEditor() ||
+		isAvadaEditor() ||
+		isSiteOriginEditor() ||
+		isThriveArchitectEditor() ||
+		isBricksEditor() ||
+		isOxygenEditor()
+	)
+}
+
+export const canLoadBlocks = () => {
+	const wp = window.wp
+	return ('undefined' !== typeof wp && 'undefined' !== typeof wp.blocks && 'undefined' !== typeof wp.blockEditor)
+}
+
+export const isBlockCodeEditor = () => {
+	if (isBlockEditor()) {
+		const selectEditPost = window.wp?.data?.select('core/edit-post')
+
+		return 'text' === selectEditPost?.getEditorMode()
+	}
+
+	return false
+}

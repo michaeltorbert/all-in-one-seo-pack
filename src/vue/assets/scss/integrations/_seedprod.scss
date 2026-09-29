@@ -1,0 +1,24 @@
+#seedprod-preview-wrapper.sp-setup_settings_seo {
+	.seedprod-settings-page {
+		padding: 0;
+	}
+
+	.aioseo-add-template-tag svg,
+	.aioseo-analysis-detail li svg,
+	.aioseo-keyphrase-tag .keyphrase-edit svg {
+		display: inline;
+		vertical-align: baseline;
+	}
+
+	.aioseo-analysis-detail li .title {
+		margin-top: 1em;
+	}
+
+	.aioseo-analysis-detail li {
+		list-style: none;
+	}
+}
+
+#seedprod-builder-save-dropdown-menu {
+	width: 225px;
+}

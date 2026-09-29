@@ -1,0 +1,410 @@
+<template>
+	<div class="aioseo-link-assistant">
+		<core-main
+			:page-name="strings.pageName"
+			:exclude-tabs="excludedTabs"
+			:showTabs="'post-report' !== route.name"
+		>
+			<component :is="getRoute" />
+		</core-main>
+	</div>
+</template>
+
+<script setup>
+import { useRoute, useRouter } from 'vue-router'
+import { computed, defineAsyncComponent, onMounted } from 'vue'
+
+import {
+	useLinkAssistantStore,
+	useRootStore
+} from '@/vue/stores'
+
+import addons from '@/vue/utils/addons'
+
+import { useRequiresActivation } from '@/vue/composables/RequiresActivation'
+import { useRequiresUpdate } from '@/vue/composables/RequiresUpdate'
+
+import CoreMain from '@/vue/components/common/core/main/Index'
+
+import { __ } from '@/vue/plugins/translations'
+import { preloadOnIdle } from '@/vue/utils/preload'
+
+const td = import.meta.env.VITE_TEXTDOMAIN
+
+const route    = useRoute()
+const router   = useRouter()
+const getRoute = computed(() => {
+	if ('overview' === route.name) {
+		return defineAsyncComponent(() => import('./Overview.vue'))
+	}
+	if ('domains-report' === route.name) {
+		return defineAsyncComponent(() => import('./AIOSEO_VERSION/DomainsReport.vue'))
+	}
+	if ('links-report' === route.name) {
+		return defineAsyncComponent(() => import('./AIOSEO_VERSION/LinksReport.vue'))
+	}
+	if ('post-report' === route.name) {
+		return defineAsyncComponent(() => import('./AIOSEO_VERSION/PostReport.vue'))
+	}
+	if ('settings' === route.name) {
+		return defineAsyncComponent(() => import('./AIOSEO_VERSION/Settings.vue'))
+	}
+
+	return defineAsyncComponent(() => import('./Overview.vue'))
+})
+
+const preloadRouteComponents = () => {
+	const currentRoute = route.name
+	const thunks       = []
+	if ('overview' !== currentRoute) thunks.push(() => import('./Overview.vue'))
+	if ('domains-report' !== currentRoute) thunks.push(() => import('./AIOSEO_VERSION/DomainsReport.vue'))
+	if ('links-report' !== currentRoute) thunks.push(() => import('./AIOSEO_VERSION/LinksReport.vue'))
+	if ('post-report' !== currentRoute) thunks.push(() => import('./AIOSEO_VERSION/PostReport.vue'))
+	if ('settings' !== currentRoute) thunks.push(() => import('./AIOSEO_VERSION/Settings.vue'))
+	preloadOnIdle(thunks)
+}
+
+const {
+	getExcludedActivationTabs
+} = useRequiresActivation()
+
+const {
+	getExcludedUpdateTabs
+} = useRequiresUpdate()
+
+const strings = {
+	pageName : __('Link Assistant', td)
+}
+
+const excludedTabs = computed(() => {
+	const tabs = (
+		!addons.isActive('aioseo-link-assistant')
+			? getExcludedActivationTabs(router, 'aioseo-link-assistant')
+			: getExcludedUpdateTabs(router, 'aioseo-link-assistant')
+	) || []
+	tabs.push('post-report')
+	return tabs
+})
+
+const linkAssistantStore = useLinkAssistantStore()
+const rootStore          = useRootStore()
+
+onMounted(() => {
+	window.aioseoBus.$on('changes-saved', () => {
+		linkAssistantStore.getMenuData()
+	})
+
+	if (
+		rootStore.isPro &&
+		100 !== linkAssistantStore.suggestionsScan.percent &&
+		addons.isActive('aioseo-link-assistant') &&
+		!addons.requiresUpgrade('aioseo-link-assistant') &&
+		addons.hasMinimumVersion('aioseo-link-assistant')
+	) {
+		linkAssistantStore.pollSuggestionsScan()
+	}
+
+	// Preload other routes after initial render
+	preloadRouteComponents()
+})
+</script>
+
+<style lang="scss">
+.aioseo-link-assistant {
+	.aioseo-wp-table {
+
+		tbody {
+			th.check-column,
+			td {
+				font-size: 14px;
+			}
+		}
+
+		tr.edit-row .edit-row-content {
+			padding: 0;
+
+			.wrapper .border {
+				padding: 0;
+			}
+
+		}
+
+		button.toggle-row-button {
+			display: flex;
+			width: 26px;
+			height: 26px;
+			padding: 0;
+			justify-content: center;
+			align-items: center;
+			background-color: white;
+			border: 1px solid $gray;
+			border-radius: 3px;
+			margin-left: auto;
+
+			&:hover {
+				cursor: pointer;
+				background-color: #F9F9FA;
+			}
+
+			&.active {
+				background-color: $blue;
+				border: 1px solid $blue;
+
+				&:hover {
+					background-color: $blue2;
+				}
+
+				svg {
+					&.aioseo-caret {
+						color: white;
+						transform: rotate(-180deg);
+					}
+				}
+			}
+
+			svg {
+				&.aioseo-caret {
+					margin: 0;
+					height: 24px;
+					width: 24px;
+					transform: rotate(-90deg);
+					color: $placeholder-color;
+					transition: transform 0.3s;
+				}
+			}
+		}
+
+		.row-actions {
+			a {
+				&.delete-all-links {
+					color: $red;
+				}
+			}
+
+			span.delete-all-links.disabled {
+				color: $placeholder-color;
+				cursor: default;
+			}
+
+			.aioseo-tooltip {
+				display: inline-flex;
+				margin-left: 0;
+			}
+		}
+
+		svg {
+			margin-right: 11.22px;
+
+			&.aioseo-link-external {
+				color: $blue;
+				width: 12px;
+				height: 12px;
+			}
+			&.aioseo-new-page {
+				color: $black2;
+				width: 9.33px;
+				height: 11.67px;
+			}
+			&.aioseo-close {
+				margin: 0;
+			}
+		}
+	}
+
+	.aioseo-tooltip .popper.action {
+		a.tooltip-url {
+			white-space: normal !important;
+		}
+	}
+
+	.aioseo-wp-table.link-assistant-inner-table {
+		.wp-table table {
+			border: 0;
+
+			thead {
+				tr:last-child {
+					th.manage-column,
+					td.manage-column {
+						border-bottom: 1px solid #c3c4c7 !important;
+					}
+				}
+			}
+
+			tbody {
+
+				tr {
+					// These are set in WordPress Core but we need to reset them for the inner table; otherwise the row actions for all rows show on hover.
+					.row-actions {
+						position: relative;
+					}
+
+					&:hover {
+						.row-actions {
+							position : static;
+						}
+					}
+				}
+			}
+
+			tbody {
+
+				.aioseo-tooltip {
+					display: inline-block;
+					margin-left: 0;
+				}
+
+				svg {
+					&.aioseo-trash {
+						width: 18px;
+						height: 22px;
+						color: $placeholder-color;
+						cursor: pointer;
+						transition: color 0.1s ease;
+						margin-top: 2px;
+
+						&:hover {
+							color: $red;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	.aioseo-tabs.link-tabs {
+		border-bottom: 1px solid $border;
+
+		.aioseo-mobile-tabs {
+			margin-left: 10px;
+		}
+
+		.var-tab {
+			display: flex;
+			align-items: center;
+			column-gap: 11.75px;
+
+			svg {
+				display: inline-block;
+				width: 14px;
+				height: 14px;
+				margin-right: 0;
+
+				&.aioseo-link-internal-inbound,
+				&.aioseo-link-internal-outbound {
+					width: 17px;
+					height: 17px;
+					color: $green;
+				}
+				&.aioseo-link-external {
+					width: 17px;
+					height: 17px;
+					color: $blue;
+				}
+				&.aioseo-link-affiliate {
+					color: $orange;
+					width: 100%;
+					height: auto;
+					max-height: 18px;
+				}
+				&.aioseo-link-suggestion {
+					color: $black2-hover;
+					width: 100%;
+					height: auto;
+					max-width: 20px;
+				}
+			}
+		}
+	}
+
+	div.links-bottom {
+		display: flex;
+		flex-direction: row;
+		font-size: 12px;
+		line-height: 18px;
+		margin: 0 16px 16px 16px;
+
+		a {
+			text-decoration: underline;
+
+			&.link-delete {
+				color: $red !important;
+			}
+
+			&:hover{
+				text-decoration: none;
+				cursor: pointer;
+			}
+		}
+
+		span.link-delete.disabled {
+			color: $placeholder-color;
+			cursor: default;
+		}
+
+		.links-bottom-right .aioseo-tooltip {
+			margin-left: 0;
+		}
+
+		.links-bottom-left {
+			display: flex;
+			flex: 1 1 auto;
+			column-gap: 28px;
+			align-items: center;
+			div {
+				display:flex;
+				align-items: center;
+				svg {
+					margin-right: 10px;
+				}
+			}
+
+			button {
+				svg {
+					margin-top: 2.5px;
+					margin-right: 10px;
+					width: 14px;
+					height: 14px;
+					color: white !important;
+				}
+			}
+
+			svg.aioseo-link-external {
+				margin-top: 3.5px;
+				width: 11px;
+				height: 11px;
+				color: $blue;
+			}
+		}
+
+		.links-bottom-right {
+			display: flex;
+			align-items: center;
+		}
+	}
+
+	svg.aioseo-trash.disabled {
+		color: $placeholder-color !important;
+		cursor: default;
+
+		&:hover {
+			color: $placeholder-color !important;
+		}
+	}
+
+	@media (max-width: 1115px) {
+		.aioseo-tabs {
+			border-bottom: 0;
+		}
+		.aioseo-mobile-tabs {
+			svg.aioseo-caret {
+				height: 20px;
+				width: 20px;
+			}
+		}
+	}
+}
+
+.aioseo-link-assistant-overview {
+	position: relative;
+}
+</style>

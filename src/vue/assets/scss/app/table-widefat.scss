@@ -1,0 +1,217 @@
+@use 'variables.scss' as *;
+
+.aioseo-wp-table {
+	// Copied from wp-admin/css/common.css WP-5.9
+	table.widefat {
+		border: 1px solid #c3c4c7;
+		box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+		background: #fff;
+	}
+
+	.postbox table.widefat {
+		box-shadow: none;
+	}
+
+	.widefat {
+		border-spacing: 0;
+		width: 100%;
+		clear: both;
+		margin: 0;
+	}
+
+	.widefat * {
+		word-wrap: break-word;
+	}
+
+	.widefat a,
+	.widefat button.button-link {
+		text-decoration: none;
+	}
+
+	.widefat td,
+	.widefat th {
+		padding: 8px 10px;
+
+		&:has(.row-actions) {
+			padding-bottom: 10px;
+		}
+	}
+
+	.widefat thead th,
+	.widefat thead td {
+		border-bottom: 1px solid #c3c4c7;
+	}
+
+	.widefat tfoot th,
+	.widefat tfoot td {
+		border-top: 1px solid #c3c4c7;
+		border-bottom: none;
+	}
+
+	.widefat .no-items td {
+		border-bottom-width: 0;
+	}
+
+	.widefat td {
+		vertical-align: top;
+	}
+
+	.widefat td,
+	.widefat td p,
+	.widefat td ol,
+	.widefat td ul {
+		font-size: $font-md;
+		line-height: 22px;
+	}
+
+	.widefat th,
+	.widefat thead td,
+	.widefat tfoot td {
+		text-align: left;
+		font-size: $font-md;
+		line-height: 22px;
+	}
+
+	.widefat th input,
+	.widefat thead td input,
+	.widefat tfoot td input {
+		margin: 0 0 0 8px;
+		padding: 0;
+		vertical-align: text-top;
+	}
+
+	.widefat .check-column {
+		line-height: 1;
+		width: 2.2em;
+		padding: 6px 0 25px;
+		vertical-align: top;
+	}
+
+	.widefat tbody th.check-column {
+		padding: 9px 0 22px;
+	}
+
+	.widefat thead td.check-column,
+	.widefat tbody th.check-column,
+	.widefat tfoot td.check-column {
+		padding: 11px 0 0 3px;
+	}
+
+	.widefat thead td.check-column,
+	.widefat tfoot td.check-column {
+		padding-top: 4px;
+		vertical-align: middle;
+	}
+
+	.no-js .widefat thead .check-column input,
+	.no-js .widefat tfoot .check-column input {
+		display: none;
+	}
+
+	.widefat .num {
+		text-align: center;
+	}
+
+	.widefat th#comments {
+		vertical-align: middle;
+	}
+
+	.widefat thead th,
+	.widefat thead td,
+	.widefat tfoot th,
+	.widefat tfoot td {
+		line-height: 1.4em;
+	}
+
+	.widefat th,
+	.widefat td {
+		color: #50575e;
+	}
+
+	.widefat th,
+	.widefat thead td,
+	.widefat tfoot td {
+		font-weight: 400;
+	}
+
+	.widefat thead tr th,
+	.widefat thead tr td,
+	.widefat tfoot tr th,
+	.widefat tfoot tr td {
+		color: #2c3338;
+	}
+
+	.widefat td p {
+		margin: 2px 0 0.8em;
+	}
+
+	.widefat p,
+	.widefat ol,
+	.widefat ul {
+		color: #2c3338;
+	}
+
+	.widefat .column-comment p {
+		margin: 0.6em 0;
+	}
+
+	.widefat .column-comment ul {
+		list-style: initial;
+		margin-left: 2em;
+	}
+
+	.row-actions span.delete a,
+	.row-actions span.trash a,
+	.row-actions span.spam a{
+		color: #b32d2e;
+	}
+	.row-actions .delete a:hover,
+	.row-actions .trash a:hover,
+	.row-actions .spam a:hover{
+		color: #b32d2e;
+		border: none;
+	}
+	// Copied from wp-admin/css/common.css WP-5.9
+
+	// Copied from wp-admin/css/list-tables.css WP-5.9
+	.row-actions {
+		color: #a7aaad;
+		font-size: 12px;
+		line-height: 18px;
+		padding: 2px 0 0;
+		position: relative;
+		left: -9999em;
+	}
+	.no-js .row-actions,
+	tr:hover .row-actions,
+	.row-actions.visible {
+		position: static;
+	}
+	// Copied from wp-admin/css/list-tables.css WP-5.9
+
+	// Custom AIOSEO
+	.widefat {
+		thead, tfoot {
+			th, td {
+				padding: 0 10px;
+				max-height: 38px;
+				height: 38px;
+			}
+
+			th.sortable {
+				a {
+					display: flex;
+					align-items: center;
+					height: 36px;
+					padding: 0;
+					line-height: 36px;
+
+					.sorting-indicator {
+						margin-top: 0;
+					}
+				}
+			}
+		}
+	}
+	// Custom AIOSEO
+}

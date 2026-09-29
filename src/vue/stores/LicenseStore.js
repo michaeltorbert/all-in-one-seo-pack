@@ -1,0 +1,235 @@
+import { defineStore } from 'pinia'
+import http from '@/vue/utils/http'
+import links from '@/vue/utils/links'
+import { __ } from '@/vue/plugins/translations'
+
+import {
+	useNotificationsStore,
+	useOptionsStore,
+	useRootStore,
+	useSensitiveOptionsStore
+} from '@/vue/stores'
+
+const td = import.meta.env.VITE_TEXTDOMAIN
+
+const innerLicenseNoticeLink = () => {
+	// Inner link.
+	const rootStore = useRootStore()
+	const innerLink = document.createElement('a')
+	innerLink.href = rootStore.aioseo.urls.aio.settings
+	innerLink.classList.add('ab-item')
+
+	// Inner span.
+	const innerSpan = document.createElement('span')
+	innerSpan.innerText = __('Add License Key', td)
+	innerSpan.classList.add('aioseo-menu-highlight')
+	innerSpan.classList.add('green')
+
+	// Append to DOM.
+	innerLink.appendChild(innerSpan)
+
+	return innerLink
+}
+
+export const useLicenseStore = defineStore('LicenseStore', {
+	state : () => ({
+		license : {
+			expires    : 0,
+			isActive   : false,
+			isDisabled : false,
+			isExpired  : false,
+			isInvalid  : false
+		}
+	}),
+	getters : {
+		isUnlicensed : state => 'pro' !== import.meta.env.VITE_VERSION.toLowerCase() || !state.license.isActive,
+		counts       : () => {
+			const rootStore = useRootStore()
+			const optionsStore = useOptionsStore()
+			let counts = rootStore.aioseo.data.isNetworkAdmin
+				? optionsStore.internalNetworkOptions.internal.license?.counts
+				: optionsStore.internalOptions.internal.license?.counts
+
+			if (counts && 'string' === typeof counts) {
+				counts = JSON.parse(counts)
+			}
+
+			return counts
+		},
+		upgradeUrl : () => {
+			const rootStore = useRootStore()
+			const optionsStore = useOptionsStore()
+
+			return rootStore.aioseo.data.isNetworkAdmin
+				? optionsStore.internalNetworkOptions.internal.license?.upgradeUrl
+				: optionsStore.internalOptions.internal.license?.upgradeUrl
+		}
+	},
+	actions : {
+		activate (key) {
+			const notificationsStore = useNotificationsStore()
+			const optionsStore = useOptionsStore()
+			const rootStore = useRootStore()
+			const sensitiveOptionsStore = useSensitiveOptionsStore()
+
+			const payload = {
+				network : rootStore.aioseo.data.isNetworkAdmin
+			}
+
+			if (key) {
+				payload.licenseKey = key.trim()
+			}
+
+			return http.post(links.restUrl('activate'))
+				.send(payload)
+				.then(response => {
+					if (rootStore.aioseo.data.isNetworkAdmin) {
+						sensitiveOptionsStore.hasNetworkLicenseKey = true
+					} else {
+						sensitiveOptionsStore.hasLicenseKey = true
+					}
+
+					notificationsStore.updateNotifications(response.body.notifications)
+
+					// This data is determined on the PHP side so that we can take multisite licensing into account.
+					// We can't use getters based on the internal options on the JS side.
+					this.license = response.body.license
+
+					if (response.body.licenseData) {
+						if (response.body.licenseData?.counts) {
+							// Decode counts if it's a string so that the activation alert shows up.
+							if ('string' === typeof response.body.licenseData.counts) {
+								response.body.licenseData.counts = JSON.parse(response.body.licenseData.counts)
+							}
+						}
+
+						Object.keys(response.body.licenseData).forEach(objectKey => {
+							const internalStore = rootStore.aioseo.data.isNetworkAdmin ? 'internalNetworkOptions' : 'internalOptions'
+							optionsStore.updateOption(internalStore, { groups: [ 'internal', 'license' ], key: objectKey, value: response.body.licenseData[objectKey] })
+						})
+
+						rootStore.aioseo.data.isNetworkLicensed = rootStore.aioseo.data.isNetworkAdmin
+
+						this.clearLicenseNotices()
+					}
+
+					if (response.body.aiOptions) {
+						const internalStore = rootStore.aioseo.data.isNetworkAdmin ? 'internalNetworkOptions' : 'internalOptions'
+						Object.keys(response.body.aiOptions).forEach(objectKey => {
+							optionsStore.updateOption(internalStore, { groups: [ 'internal', 'ai' ], key: objectKey, value: response.body.aiOptions[objectKey] })
+						})
+
+						// Directly set hasAccessToken since updateOption skips non-existing keys.
+						if (undefined !== response.body.aiOptions.hasAccessToken) {
+							optionsStore[internalStore].internal.ai.hasAccessToken = response.body.aiOptions.hasAccessToken
+						}
+					}
+
+					return response
+				})
+		},
+		multisite (sites) {
+			const notificationsStore = useNotificationsStore()
+			const rootStore = useRootStore()
+
+			return http.post(links.restUrl('multisite'))
+				.send({
+					network : rootStore.aioseo.data.isNetworkAdmin,
+					sites
+				})
+				.then(response => {
+					rootStore.aioseo.data = {
+						...rootStore.aioseo.data,
+						...{
+							network : { ...rootStore.aioseo.data.network }
+						}
+					}
+
+					notificationsStore.updateNotifications(response.body.notifications)
+				})
+		},
+		deactivate () {
+			const notificationsStore = useNotificationsStore()
+			const optionsStore = useOptionsStore()
+			const rootStore = useRootStore()
+			const sensitiveOptionsStore = useSensitiveOptionsStore()
+
+			return http.post(links.restUrl('deactivate'))
+				.send({
+					network : rootStore.aioseo.data.isNetworkAdmin
+				})
+				.then(response => {
+					if (rootStore.aioseo.data.isNetworkAdmin) {
+						sensitiveOptionsStore.hasNetworkLicenseKey = false
+					} else {
+						sensitiveOptionsStore.hasLicenseKey = false
+					}
+
+					notificationsStore.updateNotifications(response.body.notifications)
+
+					if (response.body.licenseData) {
+						Object.keys(response.body.licenseData).forEach(key => {
+							const internalStore = rootStore.aioseo.data.isNetworkAdmin ? 'internalNetworkOptions' : 'internalOptions'
+							optionsStore.updateOption(internalStore, { groups: [ 'internal', 'license' ], key, value: response.body.licenseData[key] })
+						})
+						this.license = response.body.license
+
+						if (response?.body?.aiOptions) {
+							const internalStore = rootStore.aioseo.data.isNetworkAdmin ? 'internalNetworkOptions' : 'internalOptions'
+							Object.keys(response.body.aiOptions).forEach(key => {
+								optionsStore.updateOption(internalStore, { groups: [ 'internal', 'ai' ], key, value: response.body.aiOptions[key] })
+							})
+
+							// Directly set hasAccessToken since updateOption skips non-existing keys.
+							if (undefined !== response.body.aiOptions.hasAccessToken) {
+								optionsStore[internalStore].internal.ai.hasAccessToken = response.body.aiOptions.hasAccessToken
+							}
+						}
+
+						rootStore.aioseo.isUnlicensed = true
+
+						this.addLicenseNotices()
+					}
+
+					return response
+				})
+		},
+		clearLicenseNotices () {
+			const addLicenseKey1 = document.querySelector('.aioseo-submenu-highlight')
+			if (addLicenseKey1) {
+				addLicenseKey1.remove()
+			}
+
+			const addLicenseKey2 = document.querySelector('#wp-admin-bar-aioseo-pro-license')
+			if (addLicenseKey2) {
+				addLicenseKey2.remove()
+			}
+		},
+		addLicenseNotices () {
+			// Clear if it already exists.
+			this.clearLicenseNotices()
+			const wpSidebarMenu = document.querySelector('#toplevel_page_aioseo ul.wp-submenu-wrap')
+			if (wpSidebarMenu) {
+				const addLicenseKey1 = document.createElement('li')
+				addLicenseKey1.classList.add('aioseo-submenu-highlight')
+
+				const innerLink = innerLicenseNoticeLink()
+
+				addLicenseKey1.appendChild(innerLink)
+				wpSidebarMenu.appendChild(addLicenseKey1)
+			}
+
+			const wpAdminBarMenu = document.querySelector('#wp-admin-bar-aioseo-main-default')
+			if (wpAdminBarMenu) {
+				const addLicenseKey2 = document.createElement('li')
+				addLicenseKey2.id = 'wp-admin-bar-aioseo-pro-license'
+
+				const innerLink = innerLicenseNoticeLink()
+
+				addLicenseKey2.appendChild(innerLink)
+				wpAdminBarMenu.appendChild(addLicenseKey2)
+			}
+		}
+	}
+
+})

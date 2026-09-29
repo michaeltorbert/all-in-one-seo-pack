@@ -1,0 +1,151 @@
+{
+	"root": true,
+	"extends": [
+		"plugin:vue/essential",
+		"@vue/standard"
+	],
+	"rules": {
+		"vue/experimental-script-setup-vars": "off",
+		"vue/script-setup-uses-vars": "off",
+		"vue/no-mutating-props": "off",
+		"vue/no-v-for-template-key": "off",
+		"vue/multi-word-component-names": "off",
+		"vue/no-v-text-v-html-on-component": "off",
+		"vue/no-v-model-argument": "off",
+		"object-shorthand": "off", // TODO: Add this in.
+		"import/extensions": "off",
+		"no-empty": [
+			2,
+			{
+				"allowEmptyCatch": true
+			}
+		],
+		"eqeqeq": [
+			"error",
+			"always"
+		],
+		"semi": [
+			"error",
+			"never"
+		],
+		"comma-dangle": [
+			"error",
+			"never"
+		],
+		"eol-last": [
+			"error",
+			"never"
+		],
+		"keyword-spacing": [
+			"error",
+			{
+				"after": true
+			}
+		],
+		"key-spacing": [
+			"error",
+			{
+				"singleLine": {
+					"beforeColon": false,
+					"afterColon": true
+				},
+				"multiLine": {
+					"beforeColon": true,
+					"afterColon": true,
+					"align": "colon"
+				}
+			}
+		],
+		"object-curly-spacing": [
+			"error",
+			"always"
+		],
+		"array-bracket-spacing": [
+			"error",
+			"always"
+		],
+		"valid-jsdoc": [
+			"error",
+			{
+				"preferType": {
+					"Boolean": "boolean",
+					"Number": "number",
+					"object": "Object",
+					"String": "string",
+					"array": "Array",
+					"function": "Function"
+				},
+				"prefer": {
+					"arg": "param",
+					"argument": "param",
+					"class": "constructor",
+					"return": "returns",
+					"virtual": "abstract",
+					"integer": "number"
+				},
+				"matchDescription": ".+"
+			}
+		],
+		"no-mixed-spaces-and-tabs": [
+			"error",
+			"smart-tabs"
+		],
+		"no-multi-spaces": [
+			"off"
+		],
+		"space-in-parens": [
+			"error",
+			"never"
+		],
+		"space-unary-ops": [
+			"error",
+			{
+				"nonwords": false,
+				"words": true
+			}
+		],
+		"quotes": [
+			"error",
+			"single"
+		],
+		"quote-props": [
+			"warn",
+			"as-needed"
+		],
+		"yoda": [
+			"error",
+			"always"
+		],
+		"indent": [
+			"error",
+			"tab",
+			{
+				"SwitchCase": 1,
+				"ignoredNodes": [
+					"TemplateLiteral > *"
+				]
+			}
+		],
+		"no-tabs": 0,
+		"linebreak-style": 0,
+		"one-var": [
+			"error",
+			{
+				"var": "always",
+				"let": "always", // TODO: Set this to "never"
+				"const": "never"
+			}
+		],
+		"no-unused-vars": [
+			"error",
+			{
+				"vars": "all",
+				"args": "after-used",
+				"ignoreRestSiblings": false
+			}
+		],
+		"no-new": 0,
+		"prefer-regex-literals": "off"
+	},
+	"parser": "vue-eslint-parser"
+}

@@ -1,0 +1,13 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "aioseo/locationcategories",
+	"title": "AIOSEO Local - Location Categories",
+	"description": "Displays location categories.",
+	"category": "aioseo",
+	"textdomain": "all-in-one-seo-pack",
+	"attributes": {},
+	"supports": {
+		"html": false
+	}
+}

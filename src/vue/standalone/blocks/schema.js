@@ -1,0 +1,110 @@
+import {
+	usePostEditorStore
+} from '@/vue/stores'
+
+import { debounce } from 'lodash-es'
+import { flattenBlocks } from '@/vue/utils/helpers'
+
+if ('post' === window.aioseo.currentPost?.context) {
+	let blockList = []
+	window.wp.data.subscribe(() => {
+		checkBlocksLength()
+	})
+
+	const checkBlocksLength = debounce(() => {
+		const newBlockList = window.wp.data.select('core/block-editor').getBlocks()
+		// After the last block is deleted a paragraph block is added automatically.
+		if (newBlockList.length < blockList.length || 1 === newBlockList.length) {
+			updateBlockGraphs()
+		}
+
+		blockList = newBlockList
+	}, 200)
+
+	window.aioseoBus.$on('schemaBlockUpdated', () => { updateBlockGraphs() })
+
+	const updateBlockGraphs = debounce(() => {
+		// First, grab all schema supported blocks from the editor.
+		let blocks = window.wp.data.select('core/block-editor').getBlocks()
+		blocks     = flattenBlocks(blocks) // Extract inner blocks.
+		blocks     = blocks.filter(block => block?.attributes?.schemaBlockId)
+
+		// Now, map their type to their attributes so that we can identify their type in the backend.
+		// NOTE: the attributes are copied because the graphs below decode the JSON ones. Decoding
+		// the editor's own attributes turns them into objects, which their string type rejects on
+		// the next parse, silently dropping whatever the block had stored.
+		blocks = blocks.map(block => ({
+			...block,
+			attributes : {
+				...block.attributes,
+				type : block.name
+			}
+		}))
+
+		const postEditorStore = usePostEditorStore()
+
+		// Then, grab the existing stored block graphs and loop over them to see if any of them were removed.
+		const blockGraphs = postEditorStore.currentPost.schema?.blockGraphs || []
+		blockGraphs.forEach((blockGraph, blockGraphIndex) => {
+			const blockIndex = blocks.findIndex(block => block?.attributes?.schemaBlockId === blockGraph?.schemaBlockId)
+
+			// If no block was found, then it must have been removed.
+			if (-1 === blockIndex) {
+				blockGraphs.splice(blockGraphIndex, 1)
+				return
+			}
+
+			const blockAttributes = { ...blocks[blockIndex].attributes }
+
+			// Any block attribute that we aren't watching could get updated to its previous value when we set our blockGraphs.
+			// These are known attributes that we don't need.
+			const attributesToIgnore = [
+				'backgroundColor',
+				'textColor',
+				'fontSize',
+				'style'
+			]
+
+			// Remove the irrelevant attributes before setting our blockGraphs.
+			attributesToIgnore.forEach(att => {
+				delete blockAttributes[att]
+			})
+
+			// Decode all JSON properties so that we can process them in the backend.
+			Object.keys(blockAttributes).forEach((key) => {
+				if ('string' === typeof blockAttributes[key] && blockAttributes[key].match(/^({.*}|\[.*\])$/)) {
+					blockAttributes[key] = JSON.parse(blockAttributes[key])
+				}
+			})
+
+			// If a block was found, let's update it.
+			blockGraphs[blockGraphIndex] = blockAttributes
+		})
+
+		// Now, we also need to loop over the new blocks to see if there are any new ones that need to be added.
+		blocks.forEach((block) => {
+			const blockGraphIndex = blockGraphs.findIndex(blockGraph => blockGraph?.schemaBlockId === block?.attributes?.schemaBlockId)
+			if (-1 === blockGraphIndex && block?.attributes) {
+				const blockAttributes = { ...block.attributes }
+
+				// Decode all JSON properties so that we can process them in the backend.
+				Object.keys(blockAttributes).forEach((key) => {
+					if ('string' === typeof blockAttributes[key] && blockAttributes[key].match(/^({.*}|\[.*\])$/)) {
+						blockAttributes[key] = JSON.parse(blockAttributes[key])
+					}
+				})
+
+				blockGraphs.push(blockAttributes)
+			}
+		})
+
+		// Sort the `blockGraphs` based on the `blocks` order.
+		blockGraphs.sort((a, b) => {
+			const aIndex = blocks.findIndex(block => block?.attributes?.schemaBlockId === a?.schemaBlockId)
+			const bIndex = blocks.findIndex(block => block?.attributes?.schemaBlockId === b?.schemaBlockId)
+			return aIndex - bIndex
+		})
+
+		postEditorStore.currentPost.schema.blockGraphs = blockGraphs
+	}, 200)
+}

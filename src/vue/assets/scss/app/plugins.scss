@@ -1,0 +1,24 @@
+.aioseo-plugin-row {
+	.plugin-update-tr {
+		p:first-child {
+			&:before {
+				content: '\f348';
+			}
+		}
+
+		p:not(:first-child) {
+			padding-left: 20px;
+
+			&:before {
+				content: ' ';
+			}
+		}
+	}
+
+	.proupgrade {
+		a {
+			color: #1DA867;
+			font-weight: 600;
+		}
+	}
+}

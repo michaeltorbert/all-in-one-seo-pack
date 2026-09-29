@@ -1,0 +1,135 @@
+import {
+	useRootStore,
+	useTagsStore
+} from '@/vue/stores'
+
+import {
+	isBlockEditor,
+	isClassicEditor,
+	isClassicNoEditor,
+	isElementorEditor,
+	isDiviEditor,
+	isSeedProdEditor,
+	isWPBakeryEditor,
+	isAvadaEditor,
+	isSiteOriginEditor,
+	isThriveArchitectEditor,
+	isBricksEditor,
+	isOxygenEditor
+} from '@/vue/utils/context'
+import { getEditorData as getElementorData } from '@/vue/standalone/page-builders/elementor/helpers'
+import { getEditorData as getDiviData } from '@/vue/standalone/page-builders/divi/helpers'
+import { getEditorData as getSeedProdData } from '@/vue/standalone/page-builders/seedprod/helpers'
+import { getEditorData as getWPBakeryData } from '@/vue/standalone/page-builders/wpbakery/helpers'
+import { getEditorData as getAvadaData } from '@/vue/standalone/page-builders/avada/helpers'
+import { getEditorData as getSiteOriginData } from '@/vue/standalone/page-builders/siteorigin/helpers'
+import { getEditorData as getThriveArchitectData } from '@/vue/standalone/page-builders/thrive-architect/helpers'
+import { getPostEditedSlug } from '@/vue/utils/postData/postSlug'
+import { getEditorData as getBricksData } from '@/vue/standalone/page-builders/bricks/helpers'
+import { getEditorData as getOxygenData } from '@/vue/standalone/page-builders/oxygen/helpers'
+
+/**
+ * Retrieves the permalink from the active page builder editor.
+ *
+ * @returns {string} The permalink from the active page builder editor.
+ */
+const getEditorPermalink = () => {
+	const editorMap = [
+		{ isEditor: isElementorEditor, getData: getElementorData },
+		{ isEditor: isDiviEditor, getData: getDiviData },
+		{ isEditor: isSeedProdEditor, getData: getSeedProdData },
+		{ isEditor: isWPBakeryEditor, getData: getWPBakeryData },
+		{ isEditor: isAvadaEditor, getData: getAvadaData },
+		{ isEditor: isSiteOriginEditor, getData: getSiteOriginData },
+		{ isEditor: isThriveArchitectEditor, getData: getThriveArchitectData },
+		{ isEditor: isBricksEditor, getData: getBricksData },
+		{ isEditor: isOxygenEditor, getData: getOxygenData }
+	]
+
+	for (const editor of editorMap) {
+		if (editor.isEditor()) {
+			return editor.getData()?.permalink ?? ''
+		}
+	}
+
+	return ''
+}
+
+/**
+ * Returns the stored post permalink.
+ *
+ * @returns {string} Post Permalink
+ */
+export const getPostPermalink = () => {
+	const tagsStore = useTagsStore()
+	if (tagsStore.liveTags.permalink) {
+		return tagsStore.liveTags.permalink
+	}
+
+	let postPermalink
+
+	if (isClassicEditor() || isClassicNoEditor) {
+		const classicLink = document.querySelector('#edit-slug-box a')
+		if (classicLink?.href) {
+			postPermalink = classicLink.href
+		}
+	}
+
+	if (isBlockEditor()) {
+		postPermalink = window.wp.data.select('core/editor').getPermalink()
+	}
+
+	if (!postPermalink) {
+		postPermalink = getEditorPermalink()
+	}
+
+	if (postPermalink) {
+		tagsStore.updatePermalink(postPermalink)
+	}
+
+	return postPermalink
+}
+
+/**
+ * Returns the edited post permalink.
+ *
+ * @returns {string} Post permalink
+ */
+export const getPostEditedPermalink = () => {
+	const rootStore = useRootStore()
+	let postPermalink
+
+	if (isClassicEditor() || isClassicNoEditor()) {
+		const classicLink = document.querySelector('#edit-slug-box a')
+		if (classicLink?.href) {
+			postPermalink = classicLink.href
+		}
+	}
+
+	if (isBlockEditor()) {
+		postPermalink = window.wp.data.select('core/editor').getPermalink()
+	}
+
+	if (!postPermalink) {
+		postPermalink = getEditorPermalink()
+	}
+
+	if (postPermalink && rootStore.aioseo.data.usingPermalinks && getPostEditedSlug()) {
+		// Always replace the last part of the URL with the new slug being edited.
+		const parsedUrl = new URL(postPermalink)
+
+		// Split the pathname into segments, replace the last one, and join them back.
+		const paths = parsedUrl.pathname.split('/').filter(segment => '' !== segment)
+
+		paths[0 < paths.length ? paths.length - 1 : 0] = getPostEditedSlug()
+		parsedUrl.pathname = paths.join('/') + (parsedUrl.pathname.endsWith('/') ? '/' : '')
+
+		// Remove query string and hash fragment
+		parsedUrl.search = ''
+		parsedUrl.hash = ''
+
+		postPermalink = parsedUrl.toString()
+	}
+
+	return decodeURIComponent(postPermalink)
+}

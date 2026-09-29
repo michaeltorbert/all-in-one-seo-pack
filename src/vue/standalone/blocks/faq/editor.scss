@@ -1,0 +1,27 @@
+@use '@/vue/assets/scss/app/variables.scss' as *;
+
+/**
+ * The following styles get applied inside the editor only.
+ */
+[data-type="aioseo/faq"] > .wp-block[data-align="full"] {
+	margin-left: 0;
+	margin-right: 0;
+	left: 0;
+}
+
+.wp-block-aioseo-faq {
+
+	&[data-schema-only="true"] {
+		opacity: 0.5;
+	}
+}
+
+.is-selected[data-type="aioseo/faq"],
+.has-child-selected[data-type="aioseo/faq"] {
+	border-radius: 2px;
+
+	&::after {
+		border-radius: 2px;
+		outline: 1px dotted $placeholder-color;
+	}
+}

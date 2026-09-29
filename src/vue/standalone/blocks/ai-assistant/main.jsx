@@ -1,0 +1,273 @@
+import { registerBlock, useBlockProps } from '../utils'
+
+import { h, createApp } from 'vue'
+
+import icon from './icon'
+import metadata from './block.json'
+
+import loadPlugins from '@/vue/plugins'
+import {
+	loadPiniaStores,
+	useOptionsStore
+} from '@/vue/stores'
+
+import Sidebar from './vue/Sidebar'
+import VueBlock from './vue/Block'
+
+import { useAiContent } from '@/vue/composables/AiContent'
+import { observeElement } from '@/vue/utils/helpers'
+import { getEditorDocument } from '@/vue/utils/editor'
+import { maybeDeleteBlockVueApp, useBlockSettingsRemount } from '@/vue/standalone/blocks/utils'
+
+import { TranslateSelectorMenu } from './components/TranslateSelector'
+import { ImproveSelectorMenu } from './components/ImproveSelector'
+import { PromptTemplateSelectorMenu } from './components/PromptTemplateSelector'
+import { ToneSelectorPanel } from './components/ToneSelector'
+import { AudienceSelectorPanel } from './components/AudienceSelector'
+
+import { __ } from '@/vue/plugins/translations'
+const td = import.meta.env.VITE_TEXTDOMAIN
+
+const {
+	name,
+	title,
+	description,
+	category,
+	supports,
+	attributes
+} = metadata
+export { metadata, name }
+
+const wp            = window.wp
+const { useEffect } = wp.element
+
+const { InspectorControls } = wp.blockEditor || wp.editor
+const { BlockControls }     = wp.blockEditor
+const PanelBody             = wp.components.PanelBody
+
+const aiAssistantApps = []
+const strings         = {
+	notFanOfOptions : __('Not a fan of these options? You can set your own tone/audience directly in your prompt.', td)
+}
+
+export const settings = {
+	title,
+	description,
+	category,
+	supports,
+	attributes,
+	icon,
+	edit : function ({ setAttributes, attributes, clientId, isSelected, toggleSelection }) {
+		const blockProps = useBlockProps()
+		const optionsStore = useOptionsStore()
+
+		const { toneOptions, audienceOptions } = useAiContent()
+
+		const blockAppId   = `aioseo-block-${clientId}`
+		const sidebarAppId = `aioseo-sidebar-${clientId}`
+		const $block       = getEditorDocument().getElementById(blockAppId)
+
+		const $blockParent = document.querySelector('.block-editor')
+
+		useBlockSettingsRemount(toggleSelection)
+
+		if (isSelected || $block) {
+			observeElement({
+				id      : blockAppId,
+				parent  : $blockParent,
+				subtree : true,
+				loop    : false,
+				done    : (node) => {
+					if (node.firstChild) {
+						return
+					}
+
+					maybeDeleteBlockVueApp(blockAppId, aiAssistantApps)
+
+					let app = createApp({
+						name  : 'Blocks/AiAssistant',
+						data  : () => attributes,
+						watch : {
+							'$data.userPrompt' : {
+								handler : function (value) {
+									setAttributes({ userPrompt: value })
+								}
+							},
+							'$data.isFetching' : {
+								handler : function (value) {
+									setAttributes({ isFetching: value })
+								}
+							},
+							'$data.content' : {
+								handler : function (value) {
+									setAttributes({ content: value })
+								}
+							},
+							'$data.messages' : {
+								handler : function (value) {
+									setAttributes({ messages: value })
+								}
+							}
+						},
+						render : () => h(VueBlock)
+					})
+
+					app = loadPlugins(app)
+
+					loadPiniaStores(app)
+
+					app.mount(node)
+
+					aiAssistantApps.push({
+						id  : blockAppId,
+						app : app
+					})
+				}
+			})
+		}
+
+		const sidebarApp = aiAssistantApps.find(v => sidebarAppId === v.id)
+		const $sidebarParent = document.querySelector('.interface-interface-skeleton__sidebar')
+		if (
+			($block && $sidebarParent) &&
+			(!sidebarApp || !$sidebarParent.contains(sidebarApp.app._container))
+		) {
+			observeElement({
+				id      : sidebarAppId,
+				parent  : $sidebarParent,
+				subtree : true,
+				loop    : false,
+				done    : (node) => {
+					maybeDeleteBlockVueApp(sidebarAppId, aiAssistantApps)
+
+					let app = createApp({
+						name   : 'Blocks/AiAssistant/Sidebar',
+						render : () => h(Sidebar)
+					})
+
+					app = loadPlugins(app)
+
+					loadPiniaStores(app)
+
+					app.mount(node)
+
+					aiAssistantApps.push({
+						id : sidebarAppId,
+						app
+					})
+				}
+			})
+		}
+
+		useEffect(() => {
+			// Runs when the block is removed.
+			return () => {
+				maybeDeleteBlockVueApp(blockAppId, aiAssistantApps)
+				maybeDeleteBlockVueApp(sidebarAppId, aiAssistantApps)
+			}
+		}, [])
+
+		const handleToneChange = (newTone) => {
+			setAttributes({ tone: newTone.toLowerCase() })
+		}
+
+		const handleAudienceChange = (newAudience) => {
+			setAttributes({ audience: newAudience.toLowerCase() })
+		}
+
+		const handleTranslateChange = (newTranslate) => {
+			window.aioseoBus.$emit('aiAssistantTranslateChange', {
+				clientId,
+				translate : newTranslate
+			})
+		}
+
+		const handleImproveChange = (newImprove) => {
+			window.aioseoBus.$emit('aiAssistantImproveChange', {
+				clientId,
+				improve : newImprove
+			})
+		}
+
+		const handlePromptTemplateChange = (template) => {
+			window.aioseoBus.$emit('aiAssistantPromptTemplateChange', {
+				clientId,
+				template
+			})
+		}
+
+		// Apply default tone/audience after mount. Doing it during render updates the editor
+		// store mid-render, which trips React's "update a component while rendering" warning.
+		useEffect(() => {
+			if (!attributes.tone) {
+				const defaultTone = toneOptions.find(t => t.value === optionsStore.options.aiContent.tone) || toneOptions[0]
+				// Mark as non-persistent to avoid corrupting the undo history on block insertion.
+				wp.data.dispatch('core/block-editor').__unstableMarkNextChangeAsNotPersistent?.()
+				setAttributes({ tone: defaultTone.value })
+			}
+
+			if (!attributes.audience) {
+				const defaultAudience = audienceOptions.find(a => a.value === optionsStore.options.aiContent.audience) || audienceOptions[0]
+				// Mark as non-persistent to avoid corrupting the undo history on block insertion.
+				wp.data.dispatch('core/block-editor').__unstableMarkNextChangeAsNotPersistent?.()
+				setAttributes({ audience: defaultAudience.value })
+			}
+		}, [])
+
+		return (
+			<>
+				<BlockControls>
+					<TranslateSelectorMenu
+						attributes={attributes}
+						onChange={handleTranslateChange}
+					/>
+
+					<ImproveSelectorMenu
+						attributes={attributes}
+						onChange={handleImproveChange}
+					/>
+
+					<PromptTemplateSelectorMenu
+						attributes={attributes}
+						onChange={handlePromptTemplateChange}
+					/>
+				</BlockControls>
+
+				<InspectorControls>
+					<PanelBody initialOpen={true}>
+						<ToneSelectorPanel
+							value={attributes.tone}
+							onChange={handleToneChange}
+						/>
+
+						<AudienceSelectorPanel
+							value={attributes.audience}
+							onChange={handleAudienceChange}
+						/>
+
+						<div>{strings.notFanOfOptions}</div>
+					</PanelBody>
+
+					<PanelBody initialOpen={true}>
+						<div
+							id={sidebarAppId}
+							className="aioseo-app"
+						/>
+					</PanelBody>
+				</InspectorControls>
+
+				<div {...blockProps}>
+					<div id={blockAppId} />
+				</div>
+			</>
+		)
+	},
+	save : function () {
+		return null
+	}
+}
+
+registerBlock({
+	name,
+	settings
+})
